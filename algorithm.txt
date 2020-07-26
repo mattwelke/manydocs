@@ -1,0 +1,39 @@
+Doc is saved with input "doc":
+  - if "doc ID" not specified, UUID generated for "doc ID"
+  - doc saved in DB in "doc ID docs table" with "doc ID" as PK, doc as value
+  - UUID generated and appended to "doc ID" to form "final doc insert PK"
+  - row saved in DB in "primary keys table" with:
+    - "final doc insert PK" as PK,
+    - "doc ID" as value, and
+    - the literal string "docs_by_doc_id" as table_name
+  - for each "query keys" specified:
+    - UUID generated and appended to "query key" to form "final query key"
+    - doc saved in DB in "query keys docs table" with "final query key" as PK and doc as value
+    - UUID generated and appended to "doc ID" to form "final doc insert PK"
+    - row saved in DB in "primary keys table" with:
+      - "final doc insert PK" as PK,
+      - "final query key" as value, and
+      - the literal string "docs_by_query_key_id" as table_name    
+  - "doc ID" returned
+
+Doc is looked up with input "doc ID":
+  - "doc ID docs table" is read using "doc ID"
+  - single matching doc or 404 is returned
+
+Docs are queried with input "query keys":
+  - "query keys docs table" is read using "query keys"
+  - all matching docs returned without order
+
+Doc is deleted with input "doc ID":
+  - "primary keys table" is read using "doc ID"
+  - For each PK returned:
+    - delete against PK's table is performed using the PK
+  - delete against "primary keys table" is performed using "doc ID" 
+
+Algoirthm works for both Postgres Google Cloud Bigtable as backing data stores.
+
+Tables:
+
+- doc ID docs
+- query keys docs
+- primary keys
