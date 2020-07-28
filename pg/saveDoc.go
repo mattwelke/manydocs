@@ -1,9 +1,11 @@
-package main
+package pg
 
 import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	mdhttp "github.com/mattwelke/manydocs/http"
+	"github.com/mattwelke/manydocs/utils"
 	"net/http"
 )
 
@@ -31,14 +33,11 @@ func saveDocInDocsByDocIDTable(docJSON, docID string, db *sql.DB) error {
 // the inserted document in the underlying data store table (so that it can be saved for
 // deleting the document later) or an error.
 func saveDocInQueryKeysTable(docJSON, docID, docQueryKeyID string, db *sql.DB) (string, error) {
-	finalQueryKeyID := fmt.Sprintf("%s%s", docQueryKeyID, newID())
+	finalQueryKeyID := fmt.Sprintf("%s%s", docQueryKeyID, utils.NewID())
 
-	sqlStatement := `
-		INSERT INTO docs_by_query_key_id (id, value)
-		VALUES ($1, $2)
-	`
+	SQLStatement := "INSERT INTO docs_by_query_key_id (id, value) VALUES ($1, $2)"
 
-	if err := db.QueryRow(sqlStatement, finalQueryKeyID, docJSON).Scan(); err != nil && err != sql.ErrNoRows {
+	if err := db.QueryRow(SQLStatement, finalQueryKeyID, docJSON).Scan(); err != nil && err != sql.ErrNoRows {
 		return "", fmt.Errorf("could not insert doc in Postgres: %v", err)
 	}
 	return finalQueryKeyID, nil
@@ -46,7 +45,7 @@ func saveDocInQueryKeysTable(docJSON, docID, docQueryKeyID string, db *sql.DB) (
 
 func saveDocInsertPrimaryKeys(docInsertPrimaryKeyEntries []docInsertPrimaryKeyEntry, db *sql.DB) error {
 	for _, entry := range docInsertPrimaryKeyEntries {
-		finalDocInsertPrimaryKey := fmt.Sprintf("%s%s", entry.docID, newID())
+		finalDocInsertPrimaryKey := fmt.Sprintf("%s%s", entry.docID, utils.NewID())
 
 		sqlStatement := `
 			INSERT INTO doc_insert_primary_keys (id, value, table_name)
@@ -70,49 +69,49 @@ func newSaveDocHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var op saveDocOperation
 		if err := json.NewDecoder(r.Body).Decode(&op); err != nil {
-			fmt.Fprintf(w, "could not decode save doc operation: %v", err)
+			_, _ = fmt.Fprintf(w, "could not decode save doc operation: %v", err)
 			return
 		}
 
 		newDocBytes, err := json.Marshal(op.Doc)
 		if err != nil {
-			fmt.Fprintf(w, "could not JSON encode document: %v", err)
+			_, _ = fmt.Fprintf(w, "could not JSON encode document: %v", err)
 		}
 
 		newDoc := string(newDocBytes)
 		newDocID := op.DocID
 		if newDocID == "" {
-			newDocID = newID()
+			newDocID = main.newID()
 		}
 
-		docInsertPrimaryKeyEntries := make([]docInsertPrimaryKeyEntry, 0)
+		docInsertPrimaryKeyEntries := make([]main.docInsertPrimaryKeyEntry, 0)
 
 		if err := saveDocInDocsByDocIDTable(newDoc, newDocID, db); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(w, "could not save doc in docs_by_doc_id table in Postgres: %v", err)
+			_, _ = fmt.Fprintf(w, "could not save doc in docs_by_doc_id table in Postgres: %v", err)
 			return
 		}
 
 		// Save reference to PK for delete later
-		docInsertPrimaryKeyEntries = append(docInsertPrimaryKeyEntries, docInsertPrimaryKeyEntry{
+		docInsertPrimaryKeyEntries = append(docInsertPrimaryKeyEntries, main.docInsertPrimaryKeyEntry{
 			docID:      newDocID,
 			tableName:  "docs_by_doc_id",
 			primaryKey: newDocID,
 		})
 
 		for _, queryKeys := range op.QueryKeys {
-			newDocQueryID := docQueryID(queryKeys)
+			newDocQueryID := main.docQueryID(queryKeys)
 
 			insertedPrimaryKey, err := saveDocInQueryKeysTable(newDoc, newDocID, newDocQueryID, db)
 
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
-				fmt.Fprintf(w, "could not save doc in docs_by_query_key_id table in Postgres: %v", err)
+				_, _ = fmt.Fprintf(w, "could not save doc in docs_by_query_key_id table in Postgres: %v", err)
 				return
 			}
 
 			// Save reference to PK for delete later
-			docInsertPrimaryKeyEntries = append(docInsertPrimaryKeyEntries, docInsertPrimaryKeyEntry{
+			docInsertPrimaryKeyEntries = append(docInsertPrimaryKeyEntries, main.docInsertPrimaryKeyEntry{
 				docID:      newDocID,
 				tableName:  "docs_by_query_key_id",
 				primaryKey: insertedPrimaryKey,
@@ -121,11 +120,11 @@ func newSaveDocHandler(db *sql.DB) http.HandlerFunc {
 
 		if err := saveDocInsertPrimaryKeys(docInsertPrimaryKeyEntries, db); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(w, "could not save doc insert primary keys in Postgres: %v", err)
+			_, _ = fmt.Fprintf(w, "could not save doc insert primary keys in Postgres: %v", err)
 			return
 		}
 
-		writeJSON(w, operationResult{
+		main.writeJSON(w, main.operationResult{
 			Operation: "save doc",
 			Success:   true,
 			Data: map[string]interface{}{

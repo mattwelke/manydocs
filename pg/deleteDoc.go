@@ -1,9 +1,10 @@
-package main
+package pg
 
 import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	mdhttp "github.com/mattwelke/manydocs/http"
 	"net/http"
 )
 
@@ -14,10 +15,7 @@ type deleteDocOperation struct {
 }
 
 func getDocInsertPrimaryKeyEntries(db *sql.DB, docID string) ([]docInsertPrimaryKeyEntry, error) {
-	SQLStatement := `
-SELECT value, table_name FROM doc_insert_primary_keys
-WHERE id LIKE $1
-	`
+	SQLStatement := "SELECT value, table_name FROM doc_insert_primary_keys WHERE id LIKE $1"
 
 	rows, err := db.Query(SQLStatement, fmt.Sprintf("%s%%", docID))
 	if err != nil {
@@ -69,27 +67,27 @@ func deleteDocInsertPrimaryKeyEntries(db *sql.DB, docID string) error {
 	return nil
 }
 
-func newDeleteDocHandler(db *sql.DB) http.HandlerFunc {
+func NewDeleteDocHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var op deleteDocOperation
 		if err := json.NewDecoder(r.Body).Decode(&op); err != nil {
-			writeBadRequest(w, fmt.Sprintf("could not decode delete doc operation: %v", err))
+			mdhttp.WriteBadRequest(w, fmt.Sprintf("could not decode delete doc operation: %v", err))
 			return
 		}
 
 		if op.DocID == "" {
-			writeBadRequest(w, fmt.Sprintf("missing param %q", "docId"))
+			mdhttp.WriteBadRequest(w, fmt.Sprintf("missing param %q", "docId"))
 			return
 		}
 
 		primaryKeyEntries, err := getDocInsertPrimaryKeyEntries(db, op.DocID)
 		if err != nil {
-			writeError(w, fmt.Sprintf("could not get doc insert primary key entries: %v", err))
+			mdhttp.WriteError(w, fmt.Sprintf("could not get doc insert primary key entries: %v", err))
 			return
 		}
 
 		if len(primaryKeyEntries) == 0 {
-			writeJSON(w, operationResult{
+			mdhttp.WriteJSON(w, mdhttp.OperationResult{
 				Operation: "delete doc",
 				Success:   true,
 				Data: map[string]interface{}{
@@ -101,16 +99,16 @@ func newDeleteDocHandler(db *sql.DB) http.HandlerFunc {
 
 		for _, entry := range primaryKeyEntries {
 			if err := deleteDocsByIDPrefix(db, entry.primaryKey, entry.tableName); err != nil {
-				writeError(w, fmt.Sprintf("could not delete docs for doc insert primary key entry: %v", err))
+				mdhttp.WriteError(w, fmt.Sprintf("could not delete docs for doc insert primary key entry: %v", err))
 				return
 			}
 		}
 
 		if err := deleteDocInsertPrimaryKeyEntries(db, op.DocID); err != nil {
-			writeError(w, fmt.Sprintf("could not delete doc insert primary key entries for doc ID %s: %v", op.DocID, err))
+			mdhttp.WriteError(w, fmt.Sprintf("could not delete doc insert primary key entries for doc ID %s: %v", op.DocID, err))
 		}
 
-		writeJSON(w, operationResult{
+		mdhttp.WriteJSON(w, mdhttp.OperationResult{
 			Operation: "delete doc",
 			Success:   true,
 			Data: map[string]interface{}{

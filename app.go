@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"github.com/mattwelke/manydocs/pg"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -16,30 +17,11 @@ const (
 	user     = "ylbpptjl"
 	password = "SwPrRoue2wlI7_nHuPQg2PtrZWqSa2Wb"
 	dbname   = "ylbpptjl"
-
-	queryKeyDelim = "#"
 )
 
-type docInsertPrimaryKeyEntry struct {
-	docID      string
-	tableName  string
-	primaryKey string
-}
 
-func newID() string {
-	return uuid.New().String()
-}
 
-// Forms a new document's "query ID", which is the ID used for "queries", which
-// are retrieval operations that retrieve multiple documents by query ID
-// prefix.
-func docQueryID(docQueryKeys map[string]string) string {
-	ID := ""
-	for keyName, keyValue := range docQueryKeys {
-		ID = fmt.Sprintf("%s%s%s=%s", ID, queryKeyDelim, keyName, keyValue)
-	}
-	return ID
-}
+
 
 func main() {
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
@@ -50,10 +32,10 @@ func main() {
 		panic(err)
 	}
 
-	http.HandleFunc("/save", newSaveDocHandler(db))
-	http.HandleFunc("/get", newGetDocHandler(db))
-	http.HandleFunc("/query", newQueryDocsHandler(db))
-	http.HandleFunc("/delete", newDeleteDocHandler(db))
+	http.HandleFunc("/save", pg.newSaveDocHandler(db))
+	http.HandleFunc("/get", pg.newGetDocHandler(db))
+	http.HandleFunc("/query", pg.newQueryDocsHandler(db))
+	http.HandleFunc("/delete", pg.newDeleteDocHandler(db))
 
-	http.ListenAndServe("localhost:8080", nil)
+	_ = http.ListenAndServe("localhost:8080", nil)
 }
