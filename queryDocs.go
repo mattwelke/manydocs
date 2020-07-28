@@ -13,30 +13,24 @@ type queryDocsOperation struct {
 	QueryKeys map[string]string `json:"queryKeys"`
 }
 
-type queryDocsRow struct {
-	Value string `sql:"value"`
-}
-
 func newQueryDocsHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var op queryDocsOperation
 		if err := json.NewDecoder(r.Body).Decode(&op); err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprintf(w, "could not decode query docs operation: %v", err)
+			writeBadRequest(w, fmt.Sprintf("could not decode query docs operation: %v", err))
 			return
 		}
 
-		sqlStatement := `
-SELECT value FROM docs
-WHERE query_id = $1
+		SQLStatement := `
+SELECT value FROM docs_by_query_key_id
+WHERE id LIKE $1
 		`
 
 		queryID := docQueryID(op.QueryKeys)
 
-		rows, err := db.Query(sqlStatement, queryID)
+		rows, err := db.Query(SQLStatement, fmt.Sprintf("%s%%", queryID))
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(w, "could not query docs from Postgres: %v", err)
+			writeError(w, fmt.Sprintf("could not query docs from Postgres: %v", err))
 			return
 		}
 		defer rows.Close()
@@ -46,31 +40,26 @@ WHERE query_id = $1
 		for rows.Next() {
 			var docStr string
 			if err := rows.Scan(&docStr); err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				fmt.Fprintf(w, "could not scan row for queried doc from Postgres: %v", err)
+				writeError(w, fmt.Sprintf("could not scan row for queried doc from Postgres: %v", err))
 				return
 			}
 			var doc map[string]interface{}
 			if err := json.Unmarshal([]byte(docStr), &doc); err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				fmt.Fprintf(w, "could not JSON decode queried doc from Postgres: %v", err)
+				writeError(w, fmt.Sprintf("could not JSON decode queried doc from Postgres: %v", err))
 				return
 			}
 			docs = append(docs, doc)
 		}
 
 		if err := rows.Err(); err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(w, "could not complete Postgres result iteration during query docs operation: %v", err)
+			writeError(w, fmt.Sprintf("could not complete Postgres result iteration during query docs operation: %v", err))
 			return
 		}
 
-		docsJSON, err := json.Marshal(docs)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(w, "could not JSON encode queried docs: %v", err)
-		}
-
-		writeJSON(w, docsJSON)
+		writeJSON(w, operationResult{
+			Operation: "query docs",
+			Success:   true,
+			Data:      docs,
+		})
 	}
 }

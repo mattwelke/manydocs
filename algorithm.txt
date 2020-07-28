@@ -13,7 +13,7 @@ Doc is saved with input "doc":
     - row saved in DB in "primary keys table" with:
       - "final doc insert PK" as PK,
       - "final query key" as value, and
-      - the literal string "docs_by_query_key_id" as table_name    
+      - the literal string "docs_by_query_key_id" as table_name
   - "doc ID" returned
 
 Doc is looked up with input "doc ID":

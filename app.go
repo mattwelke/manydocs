@@ -20,6 +20,12 @@ const (
 	queryKeyDelim = "#"
 )
 
+type docInsertPrimaryKeyEntry struct {
+	docID      string
+	tableName  string
+	primaryKey string
+}
+
 func newID() string {
 	return uuid.New().String()
 }
@@ -47,6 +53,7 @@ func main() {
 	http.HandleFunc("/save", newSaveDocHandler(db))
 	http.HandleFunc("/get", newGetDocHandler(db))
 	http.HandleFunc("/query", newQueryDocsHandler(db))
+	http.HandleFunc("/delete", newDeleteDocHandler(db))
 
 	http.ListenAndServe("localhost:8080", nil)
 }

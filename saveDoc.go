@@ -15,12 +15,6 @@ type saveDocOperation struct {
 	QueryKeys []map[string]string    `json:"queryKeys"`
 }
 
-type docInsertPrimaryKeyEntry struct {
-	docID      string
-	tableName  string
-	primaryKey string
-}
-
 func saveDocInDocsByDocIDTable(docJSON, docID string, db *sql.DB) error {
 	sqlStatement := `
 		INSERT INTO docs_by_doc_id (id, value)
@@ -131,13 +125,12 @@ func newSaveDocHandler(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		res := map[string]interface{}{
-			"result":       "OK",
-			"opType":       "save_doc",
-			"saved_doc":    newDoc,
-			"saved_doc_id": newDocID,
-		}
-		resJSON, _ := json.Marshal(res)
-		writeJSON(w, resJSON)
+		writeJSON(w, operationResult{
+			Operation: "save doc",
+			Success:   true,
+			Data: map[string]interface{}{
+				"newDocId": newDocID,
+			},
+		})
 	}
 }
