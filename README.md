@@ -1,5 +1,6 @@
 # manydocs
 
+![Build and Deploy to Cloud Run](https://github.com/mattwelke/manydocs/workflows/Build%20and%20Deploy%20to%20Cloud%20Run/badge.svg)
 An experiment to create a database backed by Postgres or Google Cloud Bigtable (hereafter referred to as "Bigtable") that lets you store documents.
 
 # Operations
@@ -36,4 +37,19 @@ To control the operations performed on the storage engine, an application accept
 
 GitHub Actions runs upon commits to this repository's `master` branch to build and push the application layer to Google Cloud Run.
 
-**WIP - Bigtable support is pending**
+## Progress
+
+WIP
+
+Features pending:
+
+- Document collections support
+- Bigtable storage engine support
+- IAM (permissions per user)
+- Caching via CDN (w/ cache levels per collection of documents)
+
+## Disclaimers
+
+This project is experimental and the manydocs database should not be used in production right now.
+
+*Google CLoud Bigtable and Cloud Run are registered trademarks of Google LLC*
