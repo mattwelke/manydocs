@@ -1,6 +1,7 @@
 # manydocs
 
 ![Build and Deploy to Cloud Run](https://github.com/mattwelke/manydocs/workflows/Build%20and%20Deploy%20to%20Cloud%20Run/badge.svg)
+
 An experiment to create a database backed by Postgres or Google Cloud Bigtable (hereafter referred to as "Bigtable") that lets you store documents.
 
 # Operations
