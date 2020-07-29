@@ -14,7 +14,7 @@ type getDocOperation struct {
 	DocID string `json:"docId"`
 }
 
-func newGetDocHandler(db *sql.DB) http.HandlerFunc {
+func NewGetDocHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var op getDocOperation
 		if err := json.NewDecoder(r.Body).Decode(&op); err != nil {
@@ -47,6 +47,7 @@ func newGetDocHandler(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
+		fmt.Printf("Retrieved doc with doc ID %s\n.", op.DocID)
 		mdhttp.WriteJSON(w, mdhttp.OperationResult{
 			Operation: "get doc",
 			Success:   true,

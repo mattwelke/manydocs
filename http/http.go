@@ -16,7 +16,7 @@ type OperationResult struct {
 	Data      interface{} `json:"data,omitempty"`
 }
 
-func WriteJSON(w http.ResponseWriter, result operationResult) {
+func WriteJSON(w http.ResponseWriter, result OperationResult) {
 	resultJSON, err := json.Marshal(result)
 	if err != nil {
 		WriteError(w, "could not marshal operation result: %v")

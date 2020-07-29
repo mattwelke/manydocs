@@ -5,25 +5,23 @@ import (
 	"fmt"
 	"github.com/mattwelke/manydocs/pg"
 	"net/http"
-
-	"github.com/google/uuid"
+	"os"
+	"strconv"
 
 	_ "github.com/lib/pq"
 )
 
 const (
-	host     = "hanno.db.elephantsql.com"
+	host     = "otto.db.elephantsql.com"
 	port     = 5432
-	user     = "ylbpptjl"
-	password = "SwPrRoue2wlI7_nHuPQg2PtrZWqSa2Wb"
-	dbname   = "ylbpptjl"
+	user     = "bsmeuqtn"
+	password = "rHBDPgnK9ndrsOXMYs3mthmnYRNhnytA"
+	dbname   = "bsmeuqtn"
 )
 
-
-
-
-
 func main() {
+	serverPort, _ := strconv.ParseInt(os.Getenv("PORT"), 10, 32)
+
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
 		"password=%s dbname=%s sslmode=disable",
 		host, port, user, password, dbname)
@@ -32,10 +30,13 @@ func main() {
 		panic(err)
 	}
 
-	http.HandleFunc("/save", pg.newSaveDocHandler(db))
-	http.HandleFunc("/get", pg.newGetDocHandler(db))
-	http.HandleFunc("/query", pg.newQueryDocsHandler(db))
-	http.HandleFunc("/delete", pg.newDeleteDocHandler(db))
+	db.SetMaxOpenConns(1)
+	db.SetMaxIdleConns(1)
 
-	_ = http.ListenAndServe("localhost:8080", nil)
+	http.HandleFunc("/save", pg.NewSaveDocHandler(db))
+	http.HandleFunc("/get", pg.NewGetDocHandler(db))
+	http.HandleFunc("/query", pg.NewQueryDocsHandler(db))
+	http.HandleFunc("/delete", pg.NewDeleteDocHandler(db))
+
+	_ = http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", serverPort), nil)
 }

@@ -19,7 +19,7 @@ func getDocInsertPrimaryKeyEntries(db *sql.DB, docID string) ([]docInsertPrimary
 
 	rows, err := db.Query(SQLStatement, fmt.Sprintf("%s%%", docID))
 	if err != nil {
-		return []docInsertPrimaryKeyEntry{}, fmt.Errorf("could not get doc insert primary keys from Postgres: %v", err)
+		return []docInsertPrimaryKeyEntry{}, fmt.Errorf("could not perform Postgres query: %v", err)
 	}
 	defer rows.Close()
 
@@ -50,7 +50,7 @@ func deleteDocsByIDPrefix(db *sql.DB, IDPrefix, tableName string) error {
 		fmt.Sprintf("DELETE FROM %s WHERE id LIKE $1", tableName),
 		fmt.Sprintf("%s%%", IDPrefix),
 	); err != nil {
-		return fmt.Errorf("could not delete docs in %s table with ID prefix %s: %v", tableName, IDPrefix, err)
+		return fmt.Errorf("could not perform Postgres DELETE statement to delete docs in %s table with ID prefix %s: %v", tableName, IDPrefix, err)
 	}
 
 	return nil
@@ -61,7 +61,7 @@ func deleteDocInsertPrimaryKeyEntries(db *sql.DB, docID string) error {
 		"DELETE FROM doc_insert_primary_keys WHERE id LIKE $1",
 		fmt.Sprintf("%s%%", docID),
 	); err != nil {
-		return fmt.Errorf("could not run DELETE Postgres query: %v", err)
+		return fmt.Errorf("could not perform Postgres DELETE statement: %v", err)
 	}
 
 	return nil
@@ -108,6 +108,7 @@ func NewDeleteDocHandler(db *sql.DB) http.HandlerFunc {
 			mdhttp.WriteError(w, fmt.Sprintf("could not delete doc insert primary key entries for doc ID %s: %v", op.DocID, err))
 		}
 
+		fmt.Printf("Deleted doc with doc ID %s\n.", op.DocID)
 		mdhttp.WriteJSON(w, mdhttp.OperationResult{
 			Operation: "delete doc",
 			Success:   true,

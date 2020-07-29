@@ -2,7 +2,9 @@
   <dictionary name="matt">
     <words>
       <w>delim</w>
+      <w>manydocs</w>
       <w>mdhttp</w>
+      <w>northamerica</w>
     </words>
   </dictionary>
 </component>
