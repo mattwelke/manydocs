@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	mdhttp "github.com/mattwelke/manydocs/http"
-	"github.com/mattwelke/manydocs/saveddocrefs"
 	"net/http"
 )
 
@@ -13,9 +12,7 @@ type deleteDocOperation struct {
 }
 
 func NewDeleteDocHandler(
-	getAddedDocRefs func(docID string) ([]saveddocrefs.DocInsertPrimaryKeyEntry, error),
-	deleteDocsByPrimaryKeyPrefix func(primaryKeyPrefix, tableName string) error,
-	deleteAddedDocRefsByDocID func(docID string) error,
+	docService DocService,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var op deleteDocOperation
@@ -29,7 +26,7 @@ func NewDeleteDocHandler(
 			return
 		}
 
-		primaryKeyEntries, err := getAddedDocRefs(op.DocID)
+		primaryKeyEntries, err := docService.GetAddedDocRefs(op.DocID)
 		if err != nil {
 			mdhttp.WriteError(w, fmt.Sprintf("could not get doc insert primary key entries: %v", err))
 			return
@@ -47,13 +44,13 @@ func NewDeleteDocHandler(
 		}
 
 		for _, entry := range primaryKeyEntries {
-			if err := deleteDocsByPrimaryKeyPrefix(entry.PrimaryKey, entry.TableName); err != nil {
+			if err := docService.DeleteDocsByPrimaryKeyPrefix(entry.PrimaryKey, entry.TableName); err != nil {
 				mdhttp.WriteError(w, fmt.Sprintf("could not delete docs for doc insert primary key entry: %v", err))
 				return
 			}
 		}
 
-		if err := deleteAddedDocRefsByDocID(op.DocID); err != nil {
+		if err := docService.DeleteAddedDocRefsByDocID(op.DocID); err != nil {
 			mdhttp.WriteError(w, fmt.Sprintf("could not delete doc insert primary key entries for doc ID %s: %v", op.DocID, err))
 		}
 

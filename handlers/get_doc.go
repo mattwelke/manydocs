@@ -14,7 +14,7 @@ type getDocOperation struct {
 }
 
 func NewGetDocHandler(
-	getDocByDocID func(docID string) (map[string]interface{}, error),
+	docService DocService,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var op getDocOperation
@@ -28,7 +28,7 @@ func NewGetDocHandler(
 			return
 		}
 
-		doc, err := getDocByDocID(op.DocID)
+		doc, err := docService.GetDocByDocID(op.DocID)
 		if err != nil {
 			mdhttp.WriteError(w, fmt.Sprintf("could not get document: %v", err))
 			return

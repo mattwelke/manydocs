@@ -19,9 +19,9 @@ const (
 	password = "rHBDPgnK9ndrsOXMYs3mthmnYRNhnytA"
 	dbname   = "bsmeuqtn"
 
-	tableNameDocsByDocID = "docs_by_doc_id"
+	tableNameDocsByDocID       = "docs_by_doc_id"
 	tableNameDocsByQueryPrefix = "docs_by_query_key_id"
-	tableNameAddedDocRefs = "doc_insert_primary_keys"
+	tableNameAddedDocRefs      = "doc_insert_primary_keys"
 )
 
 func main() {
@@ -38,22 +38,18 @@ func main() {
 	db.SetMaxOpenConns(1)
 	db.SetMaxIdleConns(1)
 
-	http.HandleFunc("/save", handlers.NewSaveDocHandler(
-		postgres.NewSaveDocByDocID(db, tableNameDocsByDocID),
-		postgres.NewSaveDocByQueryPrefix(db, tableNameDocsByQueryPrefix),
-		postgres.NewSaveAddedDocRef(db, tableNameAddedDocRefs),
-	))
-	http.HandleFunc("/get", handlers.NewGetDocHandler(
-		postgres.NewGetDocByDocID(db, tableNameDocsByDocID),
-	))
-	http.HandleFunc("/query", handlers.NewQueryDocsHandler(
-		postgres.NewGetDocsByQueryPrefix(db, tableNameDocsByQueryPrefix),
-	))
-	http.HandleFunc("/delete", handlers.NewDeleteDocHandler(
-		postgres.NewGetAddedDocRefs(db, tableNameAddedDocRefs),
-		postgres.NewDeleteDocsByPrimaryKeyPrefix(db),
-		postgres.NewDeleteAddedDocRefsByDocID(db, tableNameAddedDocRefs),
-	))
+	tableNames := postgres.TableNames{
+		DocsByDocID:       tableNameDocsByDocID,
+		DocsByQueryPrefix: tableNameDocsByQueryPrefix,
+		AddedDocRefs:      tableNameAddedDocRefs,
+	}
+
+	postgresDocService := postgres.NewDocService(db, tableNames)
+
+	http.HandleFunc("/save", handlers.NewSaveDocHandler(postgresDocService))
+	http.HandleFunc("/get", handlers.NewGetDocHandler(postgresDocService))
+	http.HandleFunc("/query", handlers.NewQueryDocsHandler(postgresDocService))
+	http.HandleFunc("/delete", handlers.NewDeleteDocHandler(postgresDocService))
 
 	_ = http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", serverPort), nil)
 }

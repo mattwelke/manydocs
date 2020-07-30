@@ -17,9 +17,7 @@ type saveDocOperation struct {
 }
 
 func NewSaveDocHandler(
-	saveDocByDocID func(docJSON, docID string) error,
-	saveDocByQueryPrefix func(docJSON, docQueryPrefix string) (string, error),
-	saveAddedDocRefs func(entries []saveddocrefs.DocInsertPrimaryKeyEntry) error,
+	docService DocService,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var op saveDocOperation
@@ -40,7 +38,7 @@ func NewSaveDocHandler(
 
 		docInsertPrimaryKeyEntries := make([]saveddocrefs.DocInsertPrimaryKeyEntry, 0)
 
-		if err := saveDocByDocID(newDoc, newDocID); err != nil {
+		if err := docService.SaveDocByDocID(newDoc, newDocID); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			_, _ = fmt.Fprintf(w, "could not save doc in docs_by_doc_id table in Postgres: %v", err)
 			return
@@ -54,7 +52,7 @@ func NewSaveDocHandler(
 		})
 
 		for _, queryPrefix := range op.QueryPrefixes {
-			insertedPrimaryKey, err := saveDocByQueryPrefix(newDoc, queryPrefix)
+			insertedPrimaryKey, err := docService.SaveDocByQueryPrefix(newDoc, queryPrefix)
 
 			if err != nil {
 				mdhttp.WriteError(w, fmt.Sprintf("could not save doc in docs by query prefix table: %v", err))
@@ -69,7 +67,7 @@ func NewSaveDocHandler(
 			})
 		}
 
-		if err := saveAddedDocRefs(docInsertPrimaryKeyEntries); err != nil {
+		if err := docService.SaveAddedDocRefs(docInsertPrimaryKeyEntries); err != nil {
 			mdhttp.WriteError(w, fmt.Sprintf("could not save doc insert primary keys: %v", err))
 			return
 		}
