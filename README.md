@@ -51,6 +51,6 @@ Features pending:
 
 ## Disclaimers
 
-This project is experimental and the manydocs database should not be used in production right now.
+This project is experimental. The manydocs database should not be used in production right now.
 
-*Google CLoud Bigtable and Cloud Run are registered trademarks of Google LLC*
+*Google Cloud Bigtable and Cloud Run are registered trademarks of Google LLC*
