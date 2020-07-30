@@ -1,7 +1,6 @@
-package pg
+package handlers
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	mdhttp "github.com/mattwelke/manydocs/http"
@@ -14,7 +13,9 @@ type getDocOperation struct {
 	DocID string `json:"docId"`
 }
 
-func NewGetDocHandler(db *sql.DB) http.HandlerFunc {
+func NewGetDocHandler(
+	getDocByDocID func(docID string) (map[string]interface{}, error),
+) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var op getDocOperation
 		if err := json.NewDecoder(r.Body).Decode(&op); err != nil {
@@ -27,23 +28,13 @@ func NewGetDocHandler(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		var docJSON string
-
-		if err := db.QueryRow(
-			"SELECT value FROM docs_by_doc_id WHERE id = $1",
-			op.DocID,
-		).Scan(&docJSON); err != nil {
-			if err == sql.ErrNoRows {
-				mdhttp.WriteNotFound(w)
-				return
-			}
-			mdhttp.WriteError(w, fmt.Sprintf("could not get doc from Postgres: %v", err))
+		doc, err := getDocByDocID(op.DocID)
+		if err != nil {
+			mdhttp.WriteError(w, fmt.Sprintf("could not get document: %v", err))
 			return
 		}
-
-		var doc map[string]interface{}
-		if err := json.Unmarshal([]byte(docJSON), &doc); err != nil {
-			mdhttp.WriteError(w, fmt.Sprintf("could not JSON decode retrieved document: %v", err))
+		if doc == nil {
+			mdhttp.WriteNotFound(w)
 			return
 		}
 
