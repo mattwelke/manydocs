@@ -18,10 +18,6 @@ const (
 	user     = "bsmeuqtn"
 	password = "rHBDPgnK9ndrsOXMYs3mthmnYRNhnytA"
 	dbname   = "bsmeuqtn"
-
-	tableNameDocsByDocID       = "docs_by_doc_id"
-	tableNameDocsByQueryPrefix = "docs_by_query_key_id"
-	tableNameAddedDocRefs      = "doc_insert_primary_keys"
 )
 
 func main() {
@@ -38,13 +34,7 @@ func main() {
 	db.SetMaxOpenConns(1)
 	db.SetMaxIdleConns(1)
 
-	tableNames := postgres.TableNames{
-		DocsByDocID:       tableNameDocsByDocID,
-		DocsByQueryPrefix: tableNameDocsByQueryPrefix,
-		AddedDocRefs:      tableNameAddedDocRefs,
-	}
-
-	postgresDocService := postgres.NewDocService(db, tableNames)
+	postgresDocService := postgres.NewDocService(db)
 
 	http.HandleFunc("/save", handlers.NewSaveDocHandler(postgresDocService))
 	http.HandleFunc("/get", handlers.NewGetDocHandler(postgresDocService))

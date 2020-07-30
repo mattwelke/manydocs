@@ -1,17 +1,16 @@
 package postgres
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 )
 
-func getDocsByQueryPrefix(db *sql.DB, docsByQueryPrefixTableName, queryPrefix string) ([]map[string]interface{}, error) {
-	SQLStatement := fmt.Sprintf("SELECT value FROM %s WHERE id LIKE $1", docsByQueryPrefixTableName)
+func (service DocService) QueryDocs(queryPrefix string) ([]map[string]interface{}, error) {
+	SQLStatement := fmt.Sprintf("SELECT value FROM %s WHERE id LIKE $1", docsByQueryPrefixTable)
 
-	rows, err := db.Query(SQLStatement, fmt.Sprintf("%s%%", queryPrefix))
+	rows, err := service.db.Query(SQLStatement, fmt.Sprintf("%s%%", queryPrefix))
 	if err != nil {
-		return nil, fmt.Errorf("could not perform Postgres query: %v", err)
+		return nil, fmt.Errorf("could not perform Postgres SELECT statement to query docs: %v", err)
 	}
 	defer rows.Close()
 

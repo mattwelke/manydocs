@@ -4,18 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 	mdhttp "github.com/mattwelke/manydocs/http"
+	"github.com/mattwelke/manydocs/operations"
 	"net/http"
 )
-
-type queryDocsOperation struct {
-	QueryPrefix string `json:"queryPrefix"`
-}
 
 func NewQueryDocsHandler(
 	docService DocService,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var op queryDocsOperation
+		var op operations.QueryDocs
 		if err := json.NewDecoder(r.Body).Decode(&op); err != nil {
 			mdhttp.WriteBadRequest(w, fmt.Sprintf("could not decode query docs operation: %v", err))
 			return
@@ -26,14 +23,14 @@ func NewQueryDocsHandler(
 			return
 		}
 
-		docs, err := docService.GetDocsByQueryPrefix(op.QueryPrefix)
+		docs, err := docService.QueryDocs(op.QueryPrefix)
 		if err != nil {
-			mdhttp.WriteError(w, fmt.Sprintf("could not get docs by query prefix: %v", err))
+			fmt.Printf("could not perform query docs operation: %v", err)
+			mdhttp.WriteError(w, "could not perform query docs operation")
 			return
 		}
 
-		fmt.Printf("Queried docs using query prefix %s with %d matching docs.\n", op.QueryPrefix, len(docs))
-
+		fmt.Printf("%d docs found during query docs operation with query prefix %s\n", len(docs), op.QueryPrefix)
 		mdhttp.WriteJSON(w, mdhttp.OperationResult{
 			Operation: "query docs",
 			Success:   true,

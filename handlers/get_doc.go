@@ -4,20 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 	mdhttp "github.com/mattwelke/manydocs/http"
+	"github.com/mattwelke/manydocs/operations"
 	"net/http"
 )
-
-// Operation used to save a new document. An ID will be generated for the new
-// document.
-type getDocOperation struct {
-	DocID string `json:"docId"`
-}
 
 func NewGetDocHandler(
 	docService DocService,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var op getDocOperation
+		var op operations.GetDoc
 		if err := json.NewDecoder(r.Body).Decode(&op); err != nil {
 			mdhttp.WriteBadRequest(w, fmt.Sprintf("could not decode get doc operation: %v", err))
 			return
@@ -28,17 +23,19 @@ func NewGetDocHandler(
 			return
 		}
 
-		doc, err := docService.GetDocByDocID(op.DocID)
+		doc, err := docService.GetDoc(op.DocID)
 		if err != nil {
-			mdhttp.WriteError(w, fmt.Sprintf("could not get document: %v", err))
+			fmt.Printf("could not perform get doc operation: %v\n", err)
+			mdhttp.WriteError(w, "could not perform get doc operation")
 			return
 		}
 		if doc == nil {
+			fmt.Printf("doc with doc ID %s not found during get doc operation\n", op.DocID)
 			mdhttp.WriteNotFound(w)
 			return
 		}
 
-		fmt.Printf("Retrieved doc with doc ID %s\n.", op.DocID)
+		fmt.Printf("doc with doc ID %s found during get doc operation\n", op.DocID)
 		mdhttp.WriteJSON(w, mdhttp.OperationResult{
 			Operation: "get doc",
 			Success:   true,
