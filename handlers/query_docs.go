@@ -13,7 +13,7 @@ func NewQueryDocsHandler(
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		op := operations.QueryDocs{
-			QueryPrefix: r.URL.Query().Get("queryPrefix"),
+			QueryPrefix: r.URL.Query().Get("p"),
 		}
 
 		if op.QueryPrefix == "" {
