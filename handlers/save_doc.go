@@ -3,9 +3,10 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+
 	mdhttp "github.com/mattwelke/manydocs/http"
 	"github.com/mattwelke/manydocs/operations"
-	"net/http"
 )
 
 func NewSaveDocHandler(
@@ -32,6 +33,6 @@ func NewSaveDocHandler(
 			Data: map[string]interface{}{
 				"newDocId": newDocID,
 			},
-		})
+		}, 0)
 	}
 }

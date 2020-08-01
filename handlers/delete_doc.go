@@ -3,9 +3,10 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+
 	mdhttp "github.com/mattwelke/manydocs/http"
 	"github.com/mattwelke/manydocs/operations"
-	"net/http"
 )
 
 func NewDeleteDocHandler(
@@ -45,6 +46,6 @@ func NewDeleteDocHandler(
 				"deletedDocId":                    op.DocID,
 				"deletesPerformedInStorageEngine": deletesPerformed,
 			},
-		})
+		}, 0)
 	}
 }

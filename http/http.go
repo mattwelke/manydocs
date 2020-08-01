@@ -16,13 +16,14 @@ type OperationResult struct {
 	Data      interface{} `json:"data,omitempty"`
 }
 
-func WriteJSON(w http.ResponseWriter, result OperationResult) {
+func WriteJSON(w http.ResponseWriter, result OperationResult, cacheSec int) {
 	resultJSON, err := json.Marshal(result)
 	if err != nil {
 		WriteError(w, "could not marshal operation result: %v")
 		return
 	}
 	w.Header().Add("X-Powered-By", poweredBy)
+	w.Header().Add("Cache-Control", fmt.Sprintf("public, max-age=%d", cacheSec))
 	w.Header().Add("Content-Type", "application/json")
 	_, _ = w.Write(resultJSON)
 }

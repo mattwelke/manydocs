@@ -3,9 +3,10 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+
 	mdhttp "github.com/mattwelke/manydocs/http"
 	"github.com/mattwelke/manydocs/operations"
-	"net/http"
 )
 
 func NewGetDocHandler(
@@ -40,6 +41,6 @@ func NewGetDocHandler(
 			Operation: "get doc",
 			Success:   true,
 			Data:      doc,
-		})
+		}, 0)
 	}
 }
