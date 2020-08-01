@@ -23,7 +23,9 @@ func WriteJSON(w http.ResponseWriter, result OperationResult, cacheSec int) {
 		return
 	}
 	w.Header().Add("X-Powered-By", poweredBy)
-	w.Header().Add("Cache-Control", fmt.Sprintf("public, max-age=%d", cacheSec))
+	if cacheSec > 0 {
+		w.Header().Add("Cache-Control", fmt.Sprintf("public, max-age=%d, must-revalidate", cacheSec))
+	}
 	w.Header().Add("Content-Type", "application/json")
 	_, _ = w.Write(resultJSON)
 }
