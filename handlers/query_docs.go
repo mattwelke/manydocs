@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -13,10 +12,8 @@ func NewQueryDocsHandler(
 	docService DocService,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var op operations.QueryDocs
-		if err := json.NewDecoder(r.Body).Decode(&op); err != nil {
-			mdhttp.WriteBadRequest(w, fmt.Sprintf("could not decode query docs operation: %v", err))
-			return
+		op := operations.QueryDocs{
+			QueryPrefix: r.URL.Query().Get("queryPrefix"),
 		}
 
 		if op.QueryPrefix == "" {
