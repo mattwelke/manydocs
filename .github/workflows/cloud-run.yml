@@ -43,8 +43,8 @@ jobs:
       - name: "Build and push Docker image to Google Container Registry"
         run: |-
           gcloud auth configure-docker
-          docker build -t gcr.io/${{ secrets.RUN_PROJECT }}/${{ env.SERVICE_NAME }}:${{ env.GITHUB_SHA }} .
-          docker push gcr.io/${{ secrets.RUN_PROJECT }}/${{ env.SERVICE_NAME }}:${{ env.GITHUB_SHA }}
+          docker build -t gcr.io/${{ secrets.RUN_PROJECT }}/${{ env.SERVICE_NAME }}:$GITHUB_SHA .
+          docker push gcr.io/${{ secrets.RUN_PROJECT }}/${{ env.SERVICE_NAME }}:$GITHUB_SHA
 
       - name: Deploy image to Cloud Run
         run: |-
