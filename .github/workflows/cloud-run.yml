@@ -40,24 +40,30 @@ jobs:
           service_account_key: ${{ secrets.RUN_SA_KEY }}
           project_id: ${{ secrets.RUN_PROJECT }}
 
-      - name: Build and push Docker image to Google Container Registry
-        uses: docker/build-push-action@v1.1.0
-        with:
-          username: _json_key
-          password: ${{ secrets.RUN_SA_KEY }}
-          registry: gcr.io
-          repository: ${{ secrets.RUN_PROJECT }}/${{ env.SERVICE_NAME }}
-          tags: ${{ env.GITHUB_SHA }}
+      - name: "Build and push Docker image to Google Container Registry without action"
+        run: |-
+          gcloud auth configure-docker
+          docker build -t gcr.io/${{ secrets.RUN_PROJECT }}/${{ env.SERVICE_NAME }}:latest
+          docker push gcr.io/${{ secrets.RUN_PROJECT }}/${{ env.SERVICE_NAME }}:latest
+
+      # - name: Build and push Docker image to Google Container Registry
+      #   uses: docker/build-push-action@v1.1.0
+      #   with:
+      #     username: _json_key
+      #     password: ${{ secrets.RUN_SA_KEY }}
+      #     registry: gcr.io
+      #     repository: ${{ secrets.RUN_PROJECT }}/${{ env.SERVICE_NAME }}
+      #     tags: ${{ env.GITHUB_SHA }}
 
       # Deploy image to Cloud Run
-      - name: Deploy
-        run: |-
-          gcloud run deploy "$SERVICE_NAME" \
-            --quiet \
-            --region "$RUN_REGION" \
-            --image "gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA" \
-            --platform "managed" \
-            --allow-unauthenticated \
-            --set-env-vars "STORAGE_ENGINE=POSTGRES" \
-            --max-instances 1 \
-            --memory 128Mi
+      # - name: Deploy
+      #   run: |-
+      #     gcloud run deploy "$SERVICE_NAME" \
+      #       --quiet \
+      #       --region "$RUN_REGION" \
+      #       --image "gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA" \
+      #       --platform "managed" \
+      #       --allow-unauthenticated \
+      #       --set-env-vars "STORAGE_ENGINE=POSTGRES" \
+      #       --max-instances 1 \
+      #       --memory 128Mi
